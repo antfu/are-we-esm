@@ -1,6 +1,7 @@
 import type { PackageType } from './analyze'
 import process from 'node:process'
 import { cac } from 'cac'
+import { Presets, SingleBar } from 'cli-progress'
 import pc from 'picocolors'
 import pm from 'picomatch'
 import { listPackages } from './list'
@@ -49,9 +50,24 @@ cli
       filtered = filtered.filter(l => regex.some(re => re.test(l.from)))
     }
 
-    // TODO: progress bar
+    const bar = new SingleBar({
+      clearOnComplete: true,
+      hideCursor: true,
+      format: `{bar} {value}/{total} ${pc.gray('{name}')}`,
+      linewrap: false,
+      barsize: 40,
+    }, Presets.shades_grey)
+
+    bar.start(filtered.length, 0, { name: 'packages' })
+
     // TODO: cache to disk
-    const resolved = await Promise.all(filtered.map(async pkg => await analyzePackage(pkg)))
+    const resolved = await Promise.all(filtered.map(async (pkg) => {
+      const result = await analyzePackage(pkg)
+      bar.increment(1, { name: result.spec })
+      return result
+    }))
+
+    bar.stop()
 
     const count: Record<PackageType, number> = {
       esm: 0,

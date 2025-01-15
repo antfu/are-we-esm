@@ -19,7 +19,8 @@ pnpx are-we-esm
 
 ## TODOs
 
-- [ ] Add progress bar
+- [x] Add progress bar
+- [ ] Cache the result to disk
 - [ ] Improve `--prod` flag by traversing the tree
 - [ ] Support ignore list
 - [ ] Summary how top-level packages are contribute to ESM support
