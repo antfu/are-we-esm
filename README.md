@@ -12,6 +12,8 @@ CLI to check your project's ESM support status
 
 ## Usage
 
+Run the following command in your project root:
+
 ```bash
 pnpx are-we-esm
 ```
@@ -19,13 +21,22 @@ pnpx are-we-esm
 > [!NOTE]
 > Only works with **pnpm** projects
 
+### Options
+
+- `--prod` - Check only the production dependencies
+- `--dev` - Check only the development dependencies
+- `--exclude` - Exclude packages from the check, e.g. `--exclude="eslint,eslint-*,@eslint/*"`
+- `--all` - Print all packages, including those that are ESM compatible (default: false)
+- `--list` - Print the flat list of packages, instead of tree (default: false)
+- `--depth` - Limit the depth search of the tree (default: 25)
+
 ## TODOs
 
 - [x] Add progress bar
 - [ ] Cache the result to disk
-- [ ] Improve `--prod` flag by traversing the tree
+- [x] Improve `--prod` flag by traversing the tree
 - [x] Support exclude list
-- [ ] Summary how top-level packages are contribute to ESM support
+- [x] Summary how top-level packages are contribute to ESM support
 - [ ] Web UI
 
 ## Sponsors

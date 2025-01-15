@@ -21,12 +21,21 @@ export type DependencyHierarchy = Pick<PackageDependencyHierarchy, 'name' | 'ver
     unsavedDependencies?: Record<string, RawPackageNode>
   }
 
-export interface ExtendedPackageNode extends RawPackageNode {
+export interface PackageNode {
   spec: string
+  name: string
+  version: string
+  path: string
+  dependencies: Set<string>
+  dependents: Set<string>
   flatDependents: Set<string>
   flatDependencies: Set<string>
+  nested: Set<number>
+  dev: boolean
+  prod: boolean
+  optional: boolean
 }
 
-export interface ResolvedPackageNode extends ExtendedPackageNode {
+export interface ResolvedPackageNode extends PackageNode {
   type: PackageType
 }

@@ -1,9 +1,9 @@
-import type { ExtendedPackageNode, ResolvedPackageNode } from './types'
+import type { PackageNode, ResolvedPackageNode } from './types'
 import fs from 'node:fs/promises'
 import { join } from 'node:path'
 import { analyzePackageJson } from './analyze'
 
-export async function analyzePackage(pkg: ExtendedPackageNode): Promise<ResolvedPackageNode> {
+export async function analyzePackage(pkg: PackageNode): Promise<ResolvedPackageNode> {
   const _pkg = pkg as unknown as ResolvedPackageNode
   if (_pkg.type)
     return _pkg
