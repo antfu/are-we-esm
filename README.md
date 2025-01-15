@@ -22,7 +22,7 @@ pnpx are-we-esm
 - [x] Add progress bar
 - [ ] Cache the result to disk
 - [ ] Improve `--prod` flag by traversing the tree
-- [ ] Support ignore list
+- [x] Support exclude list
 - [ ] Summary how top-level packages are contribute to ESM support
 - [ ] Web UI
 

@@ -3,9 +3,9 @@ import process from 'node:process'
 import { cac } from 'cac'
 import { Presets, SingleBar } from 'cli-progress'
 import pc from 'picocolors'
-import pm from 'picomatch'
 import { listPackages } from './list'
 import { analyzePackage } from './run'
+import { constructPatternFilter } from './utils'
 
 const cli = cac('are-we-esm')
 
@@ -36,18 +36,20 @@ cli
   .command('[...globs]')
   .option('--root <root>', 'Root directory to start from', { default: process.cwd() })
   .option('--depth <depth>', 'Depth of the dependencies tree', { default: 10 })
+  .option('--exclude <exclude...>', 'Packages to exclude')
   .action(async (globs: string[], options) => {
     const {
       packages,
     } = await listPackages({
       root: options.root,
       depth: options.depth,
+      exclude: parseCliArray(options.exclude),
     })
 
     let filtered = packages
     if (globs.length) {
-      const regex = globs.map(glob => pm.toRegex(glob))
-      filtered = filtered.filter(l => regex.some(re => re.test(l.from)))
+      const filter = constructPatternFilter(globs)
+      filtered = filtered.filter(x => filter(x.from))
     }
 
     const bar = new SingleBar({
@@ -116,3 +118,8 @@ cli
 
 cli.help()
 cli.parse()
+
+function parseCliArray(value?: string | string[]): string[] {
+  const items = Array.isArray(value) ? value.join(',') : value || ''
+  return items.split(',').map(i => i.trim()).filter(Boolean)
+}

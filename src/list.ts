@@ -1,10 +1,11 @@
 import type { DependencyHierarchy, ExtendedPackageNode, RawPackageNode } from './types'
 import { x } from 'tinyexec'
+import { constructPatternFilter } from './utils'
 
 export interface ListPackagesOptions {
   root: string
   depth: number
-  excludes?: string[]
+  exclude?: string[]
 }
 
 export interface ListPackagesResult {
@@ -25,10 +26,12 @@ export async function listPackages(
   const tree = await getDependenciesTree(options)
   const specs = new Map<string, ExtendedPackageNode>()
 
+  const excludeFilter = constructPatternFilter(options.exclude || [])
+
   function traverse(_node: RawPackageNode, importers: string[]): void {
     if (_node.from.startsWith('@types'))
       return
-    if (options.excludes?.includes(_node.from))
+    if (excludeFilter(_node.from))
       return
     const node = _node as ExtendedPackageNode
     node.spec ||= `${node.from}@${node.version}`
