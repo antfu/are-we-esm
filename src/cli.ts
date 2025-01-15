@@ -38,7 +38,7 @@ cli
   .option('-D,--dev', 'List only development dependencies', { default: false })
   .option('-a,--all', 'List all packages', { default: false })
   .option('-l,--list', 'Show in a flat list instead of a tree', { default: false })
-  .option('-b,--binary', 'Simpiled the module type to CJS and ESM', { default: false })
+  .option('-s,--simple', 'Simpiled the module type to CJS and ESM', { default: false })
   .action(async (globs: string[], options) => {
     const {
       packages,
@@ -76,7 +76,7 @@ cli
     // TODO: cache to disk
     const resolved = await Promise.all(filtered.map(async (pkg) => {
       const result = await analyzePackage(pkg)
-      if (options.binary) {
+      if (options.simple) {
         if (result.type === 'dual') {
           result.type = 'esm'
         }
@@ -91,10 +91,10 @@ cli
     bar.stop()
 
     const descriptions: Record<PackageType, string> = {
-      esm: options.binary ? 'ESM' : 'ESM-only',
+      esm: options.simple ? 'ESM' : 'ESM-only',
       dual: 'Dual ESM/CJS',
       faux: 'Faux ESM',
-      cjs: options.binary ? 'CJS' : 'CJS-only',
+      cjs: options.simple ? 'CJS' : 'CJS-only',
     }
     const count: Record<PackageType, number> = { esm: 0, dual: 0, faux: 0, cjs: 0 }
     for (const type of types) {
@@ -113,7 +113,7 @@ cli
       for (const pkg of topLevelPackages) {
         const type = pkg.type
         count[type]++
-        const pkgCount = options.binary ? { esm: 0, cjs: 0 } : { esm: 0, dual: 0, faux: 0, cjs: 0 }
+        const pkgCount = options.simple ? { esm: 0, cjs: 0 } : { esm: 0, dual: 0, faux: 0, cjs: 0 }
         const deps = Array.from(pkg.flatDependencies)
           .map(dep => resolved.find(x => x.spec === dep))
           .filter(Boolean) as ResolvedPackageNode[]
