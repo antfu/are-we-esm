@@ -34,6 +34,12 @@ pnpx are-we-esm
   </a>
 </p>
 
+## Credits
+
+Thanks to the following projects and their authors for inspiration:
+
+- The ESM/CJS detection logic is modified from [this project](https://github.com/wooorm/npm-esm-vs-cjs/blob/main/script/crawl.js) by [@wooorm](https://github.com/wooorm).
+
 ## License
 
 [MIT](./LICENSE) License © 2025-PRESENT [Anthony Fu](https://github.com/antfu)
