@@ -8,6 +8,8 @@
 
 CLI to check your project's ESM support status
 
+![Screenshot](https://github.com/user-attachments/assets/70b1c516-e20b-469f-aae7-fb5c6fd1d525)
+
 ## Usage
 
 ```bash
