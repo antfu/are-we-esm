@@ -1,8 +1,11 @@
 import type { PackageType } from './analyze'
+import type { ResolvedPackageNode } from './types'
 import process from 'node:process'
+import boxen from 'boxen'
 import { cac } from 'cac'
 import { Presets, SingleBar } from 'cli-progress'
 import pc from 'picocolors'
+import { version } from '../package.json'
 import { listPackages } from './list'
 import { analyzePackage } from './run'
 import { constructPatternFilter } from './utils'
@@ -37,6 +40,7 @@ cli
   .option('--root <root>', 'Root directory to start from', { default: process.cwd() })
   .option('--depth <depth>', 'Depth of the dependencies tree', { default: 10 })
   .option('--exclude <exclude...>', 'Packages to exclude')
+  .option('--all', 'List all packages', { default: false })
   .action(async (globs: string[], options) => {
     const {
       packages,
@@ -79,13 +83,64 @@ cli
     }
     for (const type of types) {
       const filtered = resolved.filter(x => x.type === type)
-      if (filtered.length) {
+      if (options.all && filtered.length) {
         console.log()
         console.log(pc.inverse(c(type, ` ${type.toUpperCase()} `, true)), c(type, `${filtered.length} packages:`))
         console.log()
         console.log(filtered.map(x => `  ${c(type, x.from)}${pc.dim(`@${x.version}`)}`).join('\n'))
       }
       count[type] = filtered.length
+    }
+
+    if (!options.all) {
+      const topLevelPackages = resolved.filter(x => x.flatDependents.size === 0)
+      for (const pkg of topLevelPackages) {
+        const type = pkg.type
+        count[type]++
+        const pkgCount = { esm: 0, dual: 0, faux: 0, cjs: 0 }
+        const deps = Array.from(pkg.flatDependencies)
+          .map(dep => resolved.find(x => x.spec === dep))
+          .filter(Boolean) as ResolvedPackageNode[]
+
+        pkgCount[pkg.type]++
+        for (const dep of deps) {
+          pkgCount[dep.type]++
+        }
+        const total = Object.values(pkgCount).reduce((acc, val) => acc + val, 0)
+        if (!pkgCount.cjs && !pkgCount.faux)
+          continue
+
+        let pkgCountString = ''
+        if (total > 1) {
+          pkgCountString = ' '.repeat(5) + Object.entries(pkgCount).map(([type, count]) => c(type as PackageType, String(count)).trim()).join(pc.gray(' | '))
+        }
+        console.log(`\n${c(type, pkg.from)}${pc.dim(`@${pkg.version}`)} ${pkgCountString}`)
+        for (const dep of deps) {
+          if (dep.type === 'dual' || dep.type === 'esm')
+            continue
+          console.log(` ${pc.dim('|')} ${c(dep.type, dep.from)}${pc.dim(`@${dep.version}`)}`)
+        }
+      }
+    }
+
+    if (!options.all) {
+      console.log()
+      console.log(pc.gray(
+        `Listing non-ESM packages in flat tree, pass ${pc.cyan('--all')} to list all packages`,
+      ))
+    }
+
+    if (count.cjs || count.faux) {
+      console.log()
+      console.log(boxen(
+        `  Run ${pc.cyan('pnpm why <package>@<version>')} to find out why you have a package  `,
+        {
+          borderColor: 'gray',
+          borderStyle: 'singleDouble',
+          dimBorder: true,
+        },
+      ))
+      console.log()
     }
 
     const esmRatio = (count.dual + count.esm) / resolved.length
@@ -97,23 +152,26 @@ cli
 
     for (const type of types) {
       if (count[type])
-        summary.push(`${c(type, String(count[type]).padStart(8, ' '))} packages are ${c(type, descriptions[type])}`)
+        summary.push(`${c(type, String(count[type]).padStart(8, ' '), true)} packages are ${c(type, descriptions[type])}`)
     }
 
     summary.push(
       '',
-      `${pc.green(pc.bold(`${(esmRatio * 100).toFixed(1)}%`.padStart(8, ' ')))} ESM ready`,
+      `${pc.green(pc.bold(`${(esmRatio * 100).toFixed(1)}%`.padStart(8, ' ')))} of packages are ESM-compatible`,
       '',
     )
 
-    if (count.cjs || count.faux) {
-      summary.push(
-        `   Run ${pc.cyan('pnpm why <package>@<version>')} to find out why you have a package`,
-        '',
-      )
-    }
-
-    console.log(summary.join('\n'))
+    console.log(boxen(
+      summary.join('\n'),
+      {
+        title: `${pc.inverse(pc.bold(' Are We ESM? '))} ${pc.dim(`v${version}`)}`,
+        borderColor: 'gray',
+        borderStyle: 'round',
+        padding: {
+          right: 3,
+        },
+      },
+    ))
   })
 
 cli.help()
