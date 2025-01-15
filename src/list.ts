@@ -14,7 +14,7 @@ export interface ListPackagesResult {
 }
 
 async function getDependenciesTree(options: ListPackagesOptions): Promise<DependencyHierarchy[]> {
-  const args = ['ls', '-r', '--json', '--no-optional', '--exclude-peers', '--depth', String(options.depth)]
+  const args = ['ls', '-r', '--json', '--no-optional', '--depth', String(options.depth)]
   const raw = await x('pnpm', args, { throwOnError: true, nodeOptions: { cwd: options.root } })
   const tree = JSON.parse(raw.stdout) as DependencyHierarchy[]
   return tree
