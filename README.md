@@ -23,6 +23,7 @@ pnpx are-we-esm
 
 ### Options
 
+- `--binary` - Use only ESM/CJS module detection, consider DUAL as ESM, and FAUX as CJS (default: false)
 - `--prod` - Check only the production dependencies
 - `--dev` - Check only the development dependencies
 - `--exclude` - Exclude packages from the check, e.g. `--exclude="eslint,eslint-*,@eslint/*"`

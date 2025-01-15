@@ -19,13 +19,6 @@ const colorMap: Record<PackageType, (str: string) => string> = {
   cjs: pc.yellow,
 }
 
-const descriptions: Record<PackageType, string> = {
-  esm: 'ESM-only',
-  dual: 'Dual ESM/CJS',
-  faux: 'Faux ESM',
-  cjs: 'CJS-only',
-}
-
 const types = ['esm', 'dual', 'faux', 'cjs'] as PackageType[]
 const nonEsmTypes = ['faux', 'cjs'] as PackageType[]
 
@@ -45,6 +38,7 @@ cli
   .option('-D,--dev', 'List only development dependencies', { default: false })
   .option('-a,--all', 'List all packages', { default: false })
   .option('-l,--list', 'Show in a flat list instead of a tree', { default: false })
+  .option('-b,--binary', 'Simpiled the module type to CJS and ESM', { default: false })
   .action(async (globs: string[], options) => {
     const {
       packages,
@@ -82,18 +76,27 @@ cli
     // TODO: cache to disk
     const resolved = await Promise.all(filtered.map(async (pkg) => {
       const result = await analyzePackage(pkg)
+      if (options.binary) {
+        if (result.type === 'dual') {
+          result.type = 'esm'
+        }
+        if (result.type === 'faux') {
+          result.type = 'cjs'
+        }
+      }
       bar.increment(1, { name: result.spec })
       return result
     }))
 
     bar.stop()
 
-    const count: Record<PackageType, number> = {
-      esm: 0,
-      dual: 0,
-      faux: 0,
-      cjs: 0,
+    const descriptions: Record<PackageType, string> = {
+      esm: options.binary ? 'ESM' : 'ESM-only',
+      dual: 'Dual ESM/CJS',
+      faux: 'Faux ESM',
+      cjs: options.binary ? 'CJS' : 'CJS-only',
     }
+    const count: Record<PackageType, number> = { esm: 0, dual: 0, faux: 0, cjs: 0 }
     for (const type of types) {
       const filtered = resolved.filter(x => x.type === type)
       if (options.list && filtered.length && (options.all || nonEsmTypes.includes(type))) {
@@ -110,7 +113,7 @@ cli
       for (const pkg of topLevelPackages) {
         const type = pkg.type
         count[type]++
-        const pkgCount = { esm: 0, dual: 0, faux: 0, cjs: 0 }
+        const pkgCount = options.binary ? { esm: 0, cjs: 0 } : { esm: 0, dual: 0, faux: 0, cjs: 0 }
         const deps = Array.from(pkg.flatDependencies)
           .map(dep => resolved.find(x => x.spec === dep))
           .filter(Boolean) as ResolvedPackageNode[]
