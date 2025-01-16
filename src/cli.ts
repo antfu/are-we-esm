@@ -45,7 +45,7 @@ cli
       cwd: options.root,
       depth: options.depth,
       monorepo: true,
-      traverseFilter: node => !excludeFilter(node.spec),
+      traverseFilter: node => !excludeFilter(node.name),
     })
 
     let filtered = packages
