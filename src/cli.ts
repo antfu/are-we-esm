@@ -1,28 +1,26 @@
-import type { PackageType } from './analyze'
-import type { ResolvedPackageNode } from './types'
+import type { PackageModuleType, ResolvedPackageNode } from 'node-modules-tools'
 import process from 'node:process'
 import boxen from 'boxen'
 import { cac } from 'cac'
 import { Presets, SingleBar } from 'cli-progress'
+import { analyzePackage, listPackageDependencies } from 'node-modules-tools'
 import pc from 'picocolors'
 import { version } from '../package.json'
-import { listPackages } from './list'
-import { analyzePackage } from './run'
 import { constructPatternFilter } from './utils'
 
 const cli = cac('are-we-esm')
 
-const colorMap: Record<PackageType, (str: string) => string> = {
+const colorMap: Record<PackageModuleType, (str: string) => string> = {
   esm: pc.green,
   dual: pc.cyan,
   faux: pc.magenta,
   cjs: pc.yellow,
 }
 
-const types = ['esm', 'dual', 'faux', 'cjs'] as PackageType[]
-const nonEsmTypes = ['faux', 'cjs'] as PackageType[]
+const types = ['esm', 'dual', 'faux', 'cjs'] as PackageModuleType[]
+const nonEsmTypes = ['faux', 'cjs'] as PackageModuleType[]
 
-function c(type: PackageType, str: string, bold = false): string {
+function c(type: PackageModuleType, str: string, bold = false): string {
   let colored = colorMap[type](str)
   if (bold)
     colored = pc.bold(colored)
@@ -40,12 +38,14 @@ cli
   .option('-l,--list', 'Show in a flat list instead of a tree', { default: false })
   .option('-s,--simple', 'Simpiled the module type to CJS and ESM', { default: false })
   .action(async (globs: string[], options) => {
+    const excludeFilter = constructPatternFilter(parseCliArray(options.exclude))
     const {
       packages,
-    } = await listPackages({
-      root: options.root,
+    } = await listPackageDependencies({
+      cwd: options.root,
       depth: options.depth,
-      exclude: parseCliArray(options.exclude),
+      monorepo: true,
+      traverseFilter: node => !excludeFilter(node.spec),
     })
 
     let filtered = packages
@@ -77,11 +77,11 @@ cli
     const resolved = await Promise.all(filtered.map(async (pkg) => {
       const result = await analyzePackage(pkg)
       if (options.simple) {
-        if (result.type === 'dual') {
-          result.type = 'esm'
+        if (result.module === 'dual') {
+          result.module = 'esm'
         }
-        if (result.type === 'faux') {
-          result.type = 'cjs'
+        if (result.module === 'faux') {
+          result.module = 'cjs'
         }
       }
       bar.increment(1, { name: result.spec })
@@ -90,15 +90,15 @@ cli
 
     bar.stop()
 
-    const descriptions: Record<PackageType, string> = {
+    const descriptions: Record<PackageModuleType, string> = {
       esm: options.simple ? 'ESM' : 'ESM-only',
       dual: 'Dual ESM/CJS',
       faux: 'Faux ESM',
       cjs: options.simple ? 'CJS' : 'CJS-only',
     }
-    const count: Record<PackageType, number> = { esm: 0, dual: 0, faux: 0, cjs: 0 }
+    const count: Record<PackageModuleType, number> = { esm: 0, dual: 0, faux: 0, cjs: 0 }
     for (const type of types) {
-      const filtered = resolved.filter(x => x.type === type)
+      const filtered = resolved.filter(x => x.module === type)
       if (options.list && filtered.length && (options.all || nonEsmTypes.includes(type))) {
         console.log()
         console.log(pc.inverse(c(type, ` ${type.toUpperCase()} `, true)), c(type, `${filtered.length} packages:`))
@@ -111,16 +111,16 @@ cli
     if (!options.list) {
       const topLevelPackages = resolved.filter(x => x.flatDependents.size === 0)
       for (const pkg of topLevelPackages) {
-        const type = pkg.type
+        const type = pkg.module
         count[type]++
         const pkgCount = options.simple ? { esm: 0, cjs: 0 } : { esm: 0, dual: 0, faux: 0, cjs: 0 }
         const deps = Array.from(pkg.flatDependencies)
           .map(dep => resolved.find(x => x.spec === dep))
           .filter(Boolean) as ResolvedPackageNode[]
 
-        pkgCount[pkg.type]++
+        pkgCount[pkg.module]++
         for (const dep of deps) {
-          pkgCount[dep.type]++
+          pkgCount[dep.module]++
         }
         const total = Object.values(pkgCount).reduce((acc, val) => acc + val, 0)
         if (!options.all && !pkgCount.cjs && !pkgCount.faux)
@@ -128,13 +128,13 @@ cli
 
         let pkgCountString = ''
         if (total > 1) {
-          pkgCountString = ' '.repeat(5) + Object.entries(pkgCount).map(([type, count]) => c(type as PackageType, String(count)).trim()).join(pc.gray(' | '))
+          pkgCountString = ' '.repeat(5) + Object.entries(pkgCount).map(([type, count]) => c(type as PackageModuleType, String(count)).trim()).join(pc.gray(' | '))
         }
         console.log(`\n${c(type, pkg.name)}${pc.dim(`@${pkg.version}`)} ${pkgCountString}`)
         for (const dep of deps) {
-          if (!options.all && !nonEsmTypes.includes(dep.type))
+          if (!options.all && !nonEsmTypes.includes(dep.module))
             continue
-          console.log(` ${pc.dim('|')} ${c(dep.type, dep.name)}${pc.dim(`@${dep.version}`)}`)
+          console.log(` ${pc.dim('|')} ${c(dep.module, dep.name)}${pc.dim(`@${dep.version}`)}`)
         }
       }
     }

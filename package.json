@@ -50,6 +50,7 @@
     "boxen": "^8.0.1",
     "cac": "^6.7.14",
     "cli-progress": "^3.12.0",
+    "node-modules-tools": "0.0.0",
     "picocolors": "^1.1.1",
     "picomatch": "^4.0.2",
     "tinyexec": "^0.3.2"

@@ -17,6 +17,9 @@ importers:
       cli-progress:
         specifier: ^3.12.0
         version: 3.12.0
+      node-modules-tools:
+        specifier: ^0.0.0
+        version: 0.0.0
       picocolors:
         specifier: ^1.1.1
         version: 1.1.1
@@ -2439,6 +2442,9 @@ packages:
 
   node-fetch-native@1.6.4:
     resolution: {integrity: sha512-IhOigYzAKHd244OC0JIMIUrjzctirCmPkaIfhDeGcEETWof5zKYUW7e7MYvChGWh/4CJeXEgsRyGzuF334rOOQ==}
+
+  node-modules-tools@0.0.0:
+    resolution: {integrity: sha512-xTAbDsPI7OJoM7C5RY3Yn7agtUucEA/9JmBRyjsor9EogBNCm9zh0dnmXJnmeodUvh8KDbG+h1V6lXDuZdgIFg==}
 
   node-releases@2.0.18:
     resolution: {integrity: sha512-d9VeXT4SJ7ZeOqGX6R5EM022wpL+eWPooLI+5UpWn2jCT1aosUQEhQP214x33Wkwx3JQMvIm+tIoVOdodFS40g==}
@@ -5904,6 +5910,11 @@ snapshots:
       through2: 4.0.2
 
   node-fetch-native@1.6.4: {}
+
+  node-modules-tools@0.0.0:
+    dependencies:
+      package-manager-detector: 0.2.8
+      tinyexec: 0.3.2
 
   node-releases@2.0.18: {}
 
