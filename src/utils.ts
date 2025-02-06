@@ -3,7 +3,8 @@ import pm from 'picomatch'
 export function constructPatternFilter(patterns: string[]): (str: string) => boolean {
   const matchers = patterns.map((glob) => {
     if (glob.match(/[\^$*{}]/)) {
-      const re = pm.toRegex(glob)
+      const { output } = pm.parse(glob)
+      const re = pm.toRegex(output)
       return (str: string) => re.test(str)
     }
     else {
