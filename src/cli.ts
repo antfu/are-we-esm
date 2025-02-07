@@ -36,7 +36,7 @@ cli
   .option('-D,--dev', 'List only development dependencies', { default: false })
   .option('-a,--all', 'List all packages', { default: false })
   .option('-l,--list', 'Show in a flat list instead of a tree', { default: false })
-  .option('-s,--simple', 'Simpiled the module type to CJS and ESM', { default: false })
+  .option('-s,--simple', 'Simplified the module type to CJS and ESM', { default: false })
   .action(async (globs: string[], options) => {
     const excludeFilter = constructPatternFilter(parseCliArray(options.exclude))
     const {
