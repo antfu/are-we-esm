@@ -33,4 +33,21 @@ describe('constructPatternFilter', () => {
     expect(filter('file.js')).toBe(true)
     expect(filter('example')).toBe(false)
   })
+
+  it('should match nested directory patterns', () => {
+    const filter = constructPatternFilter(['src/**/utils', 'test/**/utils'])
+    expect(filter('src/utils')).toBe(true)
+    expect(filter('src/subdir/utils')).toBe(true)
+    expect(filter('test/utils')).toBe(true)
+    expect(filter('test/subdir/utils')).toBe(true)
+    expect(filter('lib/utils')).toBe(false)
+  })
+
+  it('should handle mixed exact and wildcard directory patterns', () => {
+    const filter = constructPatternFilter(['src/utils', 'test/*'])
+    expect(filter('src/utils')).toBe(true)
+    expect(filter('test/utils')).toBe(true)
+    expect(filter('test/other')).toBe(true)
+    expect(filter('src/other')).toBe(false)
+  })
 })
