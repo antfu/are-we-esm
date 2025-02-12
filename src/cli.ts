@@ -1,20 +1,20 @@
 import type { PackageModuleType, ResolvedPackageNode } from 'node-modules-tools'
 import process from 'node:process'
+import ansi from 'ansis'
 import boxen from 'boxen'
 import { cac } from 'cac'
 import { Presets, SingleBar } from 'cli-progress'
 import { analyzePackage, listPackageDependencies } from 'node-modules-tools'
-import pc from 'picocolors'
 import { version } from '../package.json'
 import { constructPatternFilter } from './utils'
 
 const cli = cac('are-we-esm')
 
 const colorMap: Record<PackageModuleType, (str: string) => string> = {
-  esm: pc.green,
-  dual: pc.cyan,
-  faux: pc.magenta,
-  cjs: pc.yellow,
+  esm: ansi.green,
+  dual: ansi.cyan,
+  faux: ansi.magenta,
+  cjs: ansi.yellow,
 }
 
 const types = ['esm', 'dual', 'faux', 'cjs'] as PackageModuleType[]
@@ -23,7 +23,7 @@ const nonEsmTypes = ['faux', 'cjs'] as PackageModuleType[]
 function c(type: PackageModuleType, str: string, bold = false): string {
   let colored = colorMap[type](str)
   if (bold)
-    colored = pc.bold(colored)
+    colored = ansi.bold(colored)
   return colored
 }
 
@@ -66,7 +66,7 @@ cli
     const bar = new SingleBar({
       clearOnComplete: true,
       hideCursor: true,
-      format: `{bar} {value}/{total} ${pc.gray('{name}')}`,
+      format: `{bar} {value}/{total} ${ansi.gray('{name}')}`,
       linewrap: false,
       barsize: 40,
     }, Presets.shades_grey)
@@ -101,9 +101,9 @@ cli
       const filtered = resolved.filter(x => x.module === type)
       if (options.list && filtered.length && (options.all || nonEsmTypes.includes(type))) {
         console.log()
-        console.log(pc.inverse(c(type, ` ${type.toUpperCase()} `, true)), c(type, `${filtered.length} packages:`))
+        console.log(ansi.inverse(c(type, ` ${type.toUpperCase()} `, true)), c(type, `${filtered.length} packages:`))
         console.log()
-        console.log(filtered.map(x => `  ${c(type, x.name)}${pc.dim(`@${x.version}`)}`).join('\n'))
+        console.log(filtered.map(x => `  ${c(type, x.name)}${ansi.dim(`@${x.version}`)}`).join('\n'))
       }
       count[type] = filtered.length
     }
@@ -128,28 +128,26 @@ cli
 
         let pkgCountString = ''
         if (total > 1) {
-          pkgCountString = ' '.repeat(5) + Object.entries(pkgCount).map(([type, count]) => c(type as PackageModuleType, String(count)).trim()).join(pc.gray(' | '))
+          pkgCountString = ' '.repeat(5) + Object.entries(pkgCount).map(([type, count]) => c(type as PackageModuleType, String(count)).trim()).join(ansi.gray(' | '))
         }
-        console.log(`\n${c(type, pkg.name)}${pc.dim(`@${pkg.version}`)} ${pkgCountString}`)
+        console.log(`\n${c(type, pkg.name)}${ansi.dim(`@${pkg.version}`)} ${pkgCountString}`)
         for (const dep of deps) {
           if (!options.all && !nonEsmTypes.includes(dep.module))
             continue
-          console.log(` ${pc.dim('|')} ${c(dep.module, dep.name)}${pc.dim(`@${dep.version}`)}`)
+          console.log(` ${ansi.dim('|')} ${c(dep.module, dep.name)}${ansi.dim(`@${dep.version}`)}`)
         }
       }
     }
 
     if (!options.all) {
       console.log()
-      console.log(pc.gray(
-        `Listing non-ESM packages in flat tree, pass ${pc.cyan('--all --list')} to list all packages`,
-      ))
+      console.log(ansi.gray`Listing non-ESM packages in flat tree, pass ${ansi.cyan('--all --list')} to list all packages`)
     }
 
     if (count.cjs || count.faux) {
       console.log()
       console.log(boxen(
-        `  Run ${pc.cyan('pnpm why <package>@<version>')} to find out why you have a package  `,
+        `  Run ${ansi.cyan('pnpm why <package>@<version>')} to find out why you have a package  `,
         {
           borderColor: 'gray',
           borderStyle: 'singleDouble',
@@ -162,7 +160,7 @@ cli
     const esmRatio = (count.dual + count.esm) / resolved.length
     const summary = [
       '',
-      `${pc.blue(pc.bold(String(resolved.length).padStart(8, ' ')))} total packages checked`,
+      `${ansi.blue.bold(String(resolved.length).padStart(8, ' '))} total packages checked`,
       '',
     ]
 
@@ -173,14 +171,14 @@ cli
 
     summary.push(
       '',
-      `${pc.green(pc.bold(`${(esmRatio * 100).toFixed(1)}%`.padStart(8, ' ')))} of packages are ESM-compatible`,
+      `${ansi.green.bold`${(esmRatio * 100).toFixed(1)}%`.padStart(8, ' ')} of packages are ESM-compatible`,
       '',
     )
 
     console.log(boxen(
       summary.join('\n'),
       {
-        title: `${pc.inverse(pc.bold(' Are We ESM? '))} ${pc.dim(`v${version}`)}`,
+        title: `${ansi.inverse.bold` Are We ESM? `} ${ansi.dim`v${version}`}`,
         borderColor: 'gray',
         borderStyle: 'round',
         padding: {
