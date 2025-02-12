@@ -1,3 +1,7 @@
+**Deprecated**: use [`node-modules-inspector`](https://github.com/antfu/node-modules-inspector) instead.
+
+--- 
+
 # are-we-esm
 
 [![npm version][npm-version-src]][npm-version-href]
